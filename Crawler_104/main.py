@@ -72,7 +72,7 @@ def search_job(target_company, job_key):
             job_post_date = result.find('span', {'itemprop': 'datePosted'}).text
             job_salary = result.find('span', {'itemprop': 'price'}).text
 
-            search_result = re.findall('|'.join(JOB_KEY).lower(), (job_title + ' ' + job_des).lower())
+            search_result = re.findall('|'.join(job_key).lower(), (job_title + ' ' + job_des).lower())
             if search_result:
                 print(job_title, job_place, list(dict.fromkeys(search_result)))
                 job_list.append({'職位名稱': job_title,
