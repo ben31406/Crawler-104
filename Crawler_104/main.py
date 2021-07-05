@@ -47,6 +47,7 @@ def get_target_company(company_search_list):
     while True:
         try:
             correct_index = int(input('\n======請輸入正確公司名稱代碼(最前面數字)' + '=' * 20 + '\n'))
+            break
         except ValueError:
             print('Oops...請輸入數字(公司名稱最前面的數字)')
     target_company = company_search_list[correct_index]
