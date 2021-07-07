@@ -54,6 +54,18 @@ def get_target_company(company_search_list):
     return target_company
 
 
+def get_target_company_from_id(comp_id):
+    url = f'https://www.104.com.tw/jb/104i/joblist/list?c={comp_id}'
+    res = requests.get(url)
+    res.encoding = 'utf-8'
+    soup = BS(res.text, 'lxml')
+    company_name = soup.find('div', {'class': 'w-condition show'}).find('a').text
+    comp_dic = dict()
+    comp_dic['company_name'] = company_name
+    comp_dic['company_code'] = comp_id
+    return comp_dic
+
+
 def search_job(target_company, job_key):
     print('Searching...')
     c_code = target_company.get('company_code')
@@ -100,14 +112,25 @@ def get_file_save_path(company):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--compKey')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-k', '--compKey')
+    group.add_argument('-i', '--compId')
     args = parser.parse_args()
     comp_key = args.compKey
+    comp_code = args.compId
 
-    company_search_list = search_company_from_key(comp_key)
-    target_company = get_target_company(company_search_list)
+    if comp_key:
+        company_search_list = search_company_from_key(comp_key)
+        target_company = get_target_company(company_search_list)
+    else:
+        target_company = get_target_company_from_id(comp_code)
+
     target_job_list = search_job(target_company, JOB_KEY)
-    df = pd.DataFrame(target_job_list)
-    file_save_path = get_file_save_path(target_company)
-    df.to_excel(file_save_path, index=False)
-    print('File Saved！')
+    if not len(target_job_list) == 0:
+        df = pd.DataFrame(target_job_list)
+        file_save_path = get_file_save_path(target_company)
+        df.to_excel(file_save_path, index=False)
+        print('File Saved！')
+    else:
+        print('Not Found')
+
