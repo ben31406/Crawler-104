@@ -25,14 +25,17 @@ pip install -r requirements.txt
 在setting.py中修改SAVE_PATH，指定Excel檔案輸出路徑
 
 ### Step.4
-於終端機執行main.py，執行時有兩個參數可以輸入\
+於終端機執行main.py，執行時有以下參數可以輸入
+1. 目標公司輸入方式(Required, choose one.)\
 `-k --compKey`\
 `-i --compId`\
-表示兩種目標公司輸入方式。\
 -k 表示使用公司關鍵字方式輸入，輸入後程式將根據關鍵字，引導使用者選擇並輸入正確的目標公司名稱\
 -i 表示直接輸入目標公司在104人力銀行網站上的id\
 `https://www.104.com.tw/jb/104i/cust/view?c={THIS IS THE ID}`
 
+2. 職缺更新時間(Optional)\
+`-d --date`\
+指定程式只抓取輸入的日期之後的職缺資訊
 ### 範例
 ```
 python main.py -k 國泰
@@ -42,4 +45,9 @@ python main.py -k 國泰
 ```
 python main.py -i 503a4224565c3e2430683b1d1d1d1d5f2443a363189j48
 ```
-程式將直接使用使用者輸入的id去搜尋
+程式將直接使用使用者輸入的id去搜尋，且爬取全部職缺資訊
+
+```
+python main.py -i 503a4224565c3e2430683b1d1d1d1d5f2443a363189j48 -d 2021-07-08
+```
+程式將直接使用使用者輸入的id去搜尋，但只抓取2021-07-08(含)之後的職缺資訊

@@ -4,6 +4,7 @@ import re
 import os
 from urllib.parse import quote
 import argparse
+from datetime import datetime
 
 import requests
 import pandas as pd
@@ -66,23 +67,37 @@ def get_target_company_from_id(comp_id):
     return comp_dic
 
 
-def search_job(target_company, job_key):
+def check_break(job_post_date, end_date):
+    #print(datetime.strptime(job_post_date, '%Y-%m-%d'))
+    #print(datetime.strptime(end_date, '%Y-%m-%d'))
+    return datetime.strptime(job_post_date, '%Y-%m-%d') < datetime.strptime(end_date, '%Y-%m-%d')
+
+
+def search_job(target_company, job_key, end_date):
     print('Searching...')
     c_code = target_company.get('company_code')
-    url = f'https://www.104.com.tw/jb/104i/joblist/list?c={c_code}'
+    url = f'https://www.104.com.tw/jb/104i/joblist/list?order=11%2C0&c={c_code}'
     job_list = []
-    while True:
+    break_point = False
+    while not break_point:
         res = requests.get(url)
         res.encoding = 'utf-8'
         soup = BS(res.text, 'lxml')
 
         results = soup.find_all('div', {'class': 'm-box w-resultBox'})
         for result in results:
+            job_post_date = result.find('span', {'itemprop': 'datePosted'}).text
+
+            if end_date:
+                if check_break(job_post_date, end_date):
+                    break_point = True
+                    break
+
+
             job_title = result.find('a', {'class': 'a4'}).get('title')
             job_url = 'https://www.104.com.tw' + result.find('a', {'class': 'a4'}).get('href')
             job_place = result.find('address').text.strip()
             job_des = result.find('div', {'itemprop': 'description'}).text.strip()
-            job_post_date = result.find('span', {'itemprop': 'datePosted'}).text
             job_salary = result.find('span', {'itemprop': 'price'}).text
 
             search_result = re.findall('|'.join(job_key).lower(), (job_title + ' ' + job_des).lower())
@@ -100,7 +115,7 @@ def search_job(target_company, job_key):
             url = 'https://www.104.com.tw' + next_page_btn.get('href')
             time.sleep(random.randint(5, 8))
         else:
-            break
+            break_point = True
     return job_list
 
 
@@ -115,9 +130,11 @@ if __name__ == '__main__':
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-k', '--compKey')
     group.add_argument('-i', '--compId')
+    parser.add_argument('-d', '--date')
     args = parser.parse_args()
     comp_key = args.compKey
     comp_code = args.compId
+    end_date = args.date
 
     if comp_key:
         company_search_list = search_company_from_key(comp_key)
@@ -125,7 +142,7 @@ if __name__ == '__main__':
     else:
         target_company = get_target_company_from_id(comp_code)
 
-    target_job_list = search_job(target_company, JOB_KEY)
+    target_job_list = search_job(target_company, JOB_KEY, end_date)
     if not len(target_job_list) == 0:
         df = pd.DataFrame(target_job_list)
         file_save_path = get_file_save_path(target_company)
