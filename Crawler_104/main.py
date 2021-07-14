@@ -21,6 +21,9 @@ def search_company_from_key(comp_key):
     r.encoding = 'utf-8'
     s = BS(r.text, 'lxml')
     all_comp = s.find_all('div', {'class': 'm-box w-resultBox'})
+    if not all_comp:
+        print('無搜尋結果', comp_key)
+        sys.exit(0)
 
     company_search_list = []
     print('搜尋公司關鍵字：', comp_key)
@@ -61,7 +64,11 @@ def get_target_company_from_id(comp_id):
     res = requests.get(url)
     res.encoding = 'utf-8'
     soup = BS(res.text, 'lxml')
-    company_name = soup.find('div', {'class': 'w-condition show'}).find('a').text
+    a_tag = soup.find('div', {'class': 'w-condition show'}).find('a')
+    if not a_tag:
+        print('Oops...something wrong with company Id', comp_id, ', skipping')
+        return []
+    company_name = a_tag.text
     comp_dic = dict()
     comp_dic['company_name'] = company_name
     comp_dic['company_code'] = comp_id
