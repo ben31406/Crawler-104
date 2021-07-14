@@ -29,9 +29,11 @@ pip install -r requirements.txt
 1. 目標公司輸入方式(Required, choose one.)\
 `-k --compKey`\
 `-i --compId`\
+`-f --compIdFile`\
 -k 表示使用公司關鍵字方式輸入，輸入後程式將根據關鍵字，引導使用者選擇並輸入正確的目標公司名稱\
 -i 表示直接輸入目標公司在104人力銀行網站上的id\
-`https://www.104.com.tw/jb/104i/cust/view?c={THIS IS THE ID}`
+`https://www.104.com.tw/jb/104i/cust/view?c={THIS IS THE ID}`\
+-f 可以在與main.py相同路徑下新增**id_list.txt**檔案儲存所有想爬取公司的id，程式將逐一爬取(一個id一列)
 
 2. 職缺更新時間(Optional)\
 `-d --date`\
@@ -51,3 +53,8 @@ python main.py -i 503a4224565c3e2430683b1d1d1d1d5f2443a363189j48
 python main.py -i 503a4224565c3e2430683b1d1d1d1d5f2443a363189j48 -d 2021-07-08
 ```
 程式將直接使用使用者輸入的id去搜尋，但只抓取2021-07-08(含)之後的職缺資訊
+
+```
+python main.py -f -d 2021-07-14
+```
+程式將讀取**id_list.txt**檔案中所有id，並逐一進行爬取，但只抓取2021-07-14(含)之後的職缺資訊

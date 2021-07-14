@@ -5,6 +5,7 @@ import os
 from urllib.parse import quote
 import argparse
 from datetime import datetime
+import sys
 
 import requests
 import pandas as pd
@@ -52,7 +53,7 @@ def get_target_company(company_search_list):
         except ValueError:
             print('Oops...請輸入數字(公司名稱最前面的數字)')
     target_company = company_search_list[correct_index]
-    return target_company
+    return [target_company]
 
 
 def get_target_company_from_id(comp_id):
@@ -64,17 +65,18 @@ def get_target_company_from_id(comp_id):
     comp_dic = dict()
     comp_dic['company_name'] = company_name
     comp_dic['company_code'] = comp_id
-    return comp_dic
+    return [comp_dic]
 
 
 def check_break(job_post_date, end_date):
-    #print(datetime.strptime(job_post_date, '%Y-%m-%d'))
-    #print(datetime.strptime(end_date, '%Y-%m-%d'))
+    # print(datetime.strptime(job_post_date, '%Y-%m-%d'))
+    # print(datetime.strptime(end_date, '%Y-%m-%d'))
     return datetime.strptime(job_post_date, '%Y-%m-%d') < datetime.strptime(end_date, '%Y-%m-%d')
 
 
 def search_job(target_company, job_key, end_date):
-    print('Searching...')
+    company_name = target_company.get('company_name')
+    print(f'Searching for {company_name}...')
     c_code = target_company.get('company_code')
     url = f'https://www.104.com.tw/jb/104i/joblist/list?order=11%2C0&c={c_code}'
     job_list = []
@@ -92,7 +94,6 @@ def search_job(target_company, job_key, end_date):
                 if check_break(job_post_date, end_date):
                     break_point = True
                     break
-
 
             job_title = result.find('a', {'class': 'a4'}).get('title')
             job_url = 'https://www.104.com.tw' + result.find('a', {'class': 'a4'}).get('href')
@@ -125,24 +126,7 @@ def get_file_save_path(company):
     return filepath
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-k', '--compKey')
-    group.add_argument('-i', '--compId')
-    parser.add_argument('-d', '--date')
-    args = parser.parse_args()
-    comp_key = args.compKey
-    comp_code = args.compId
-    end_date = args.date
-
-    if comp_key:
-        company_search_list = search_company_from_key(comp_key)
-        target_company = get_target_company(company_search_list)
-    else:
-        target_company = get_target_company_from_id(comp_code)
-
-    target_job_list = search_job(target_company, JOB_KEY, end_date)
+def save_file(target_company, target_job_list):
     if not len(target_job_list) == 0:
         df = pd.DataFrame(target_job_list)
         file_save_path = get_file_save_path(target_company)
@@ -151,3 +135,50 @@ if __name__ == '__main__':
     else:
         print('Not Found')
 
+
+def get_id_list_from_file():
+    print('Loading id_list file')
+    id_list = []
+    with open('id_list.txt', 'r') as f:
+        for line in f:
+            id_list.append(line.replace('\n', ''))
+    print('Total company：', len(id_list))
+    return id_list
+
+
+def check_input():
+    if not JOB_KEY or not SAVE_PATH:
+        print('Please set the JOB_KEY and SAVE_PATH variables in setting.py')
+        sys.exit(0)
+
+
+if __name__ == '__main__':
+    check_input()
+
+    parser = argparse.ArgumentParser()
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-k', '--compKey')
+    group.add_argument('-i', '--compId')
+    group.add_argument('-f', '--compIdFile', action='store_true')
+    parser.add_argument('-d', '--date')
+    args = parser.parse_args()
+    comp_key = args.compKey
+    comp_code = args.compId
+    compIdFile = args.compIdFile
+    end_date = args.date
+
+    if comp_key:
+        company_search_list = search_company_from_key(comp_key)
+        target_company_list = get_target_company(company_search_list)
+    elif comp_code:
+        target_company_list = get_target_company_from_id(comp_code)
+    elif compIdFile:
+        id_list = get_id_list_from_file()
+        target_company_list = []
+        for id_ in id_list:
+            target_company_list += get_target_company_from_id(id_)
+            time.sleep(random.randint(2, 4))
+
+    for target_company in target_company_list:
+        target_job_list = search_job(target_company, JOB_KEY, end_date)
+        save_file(target_company, target_job_list)
