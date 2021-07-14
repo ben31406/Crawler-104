@@ -39,21 +39,25 @@ pip install -r requirements.txt
 `-d --date`\
 指定程式只抓取輸入的日期之後的職缺資訊
 ### 範例
+Example 1：
 ```
 python main.py -k 國泰
 ```
 程式將列舉出15個國泰相關的公司給使用者選擇並輸入
 
+Example 2：
 ```
 python main.py -i 503a4224565c3e2430683b1d1d1d1d5f2443a363189j48
 ```
 程式將直接使用使用者輸入的id去搜尋，且爬取全部職缺資訊
 
+Example 3：
 ```
 python main.py -i 503a4224565c3e2430683b1d1d1d1d5f2443a363189j48 -d 2021-07-08
 ```
 程式將直接使用使用者輸入的id去搜尋，但只抓取2021-07-08(含)之後的職缺資訊
 
+Example 4：
 ```
 python main.py -f -d 2021-07-14
 ```
